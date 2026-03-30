@@ -6,27 +6,28 @@ import {
   ChevronLeft, Check, Network, Search, Target, LayoutTemplate, Download, Upload, Save
 } from 'lucide-react';
 
+// Blanco start-sjabloon
 const initialCard = {
-  id: "VT-02",
-  procesblok: "Verwijzing t/m triage",
-  knelpunten: "Verwijzing is niet altijd volledig\nOnduidelijk wie ontbrekende informatie opvraagt\nVervolgroute bij incomplete informatie is niet expliciet",
-  vermoedeOorzaak: "Ontbrekende verplichte velden in ZorgDomein\nGeen harde afspraken met verwijzers",
-  bron: "Verwijzer (Huisarts/Specialist)",
-  systeem: "ZorgDomein / XDS",
-  input: "Verwijsbrief, medische voorgeschiedenis, beelden",
-  klant: "Triage verpleegkundige / Radiotherapeut",
-  ontwerpprincipe: "GEGEVEN een incomplete verwijzing\nWANNEER deze in ZorgDomein wordt ontvangen\nDAN krijgt deze de status 'aanvulling nodig'",
-  minimalViableDataset: "Status: 'aanvulling nodig'\nTaak aanmaken voor de poli\nWorklist / zichtbaarheid dossierstatus\nReminder op openstaande taak",
-  uitzonderingen: "Spoed\nMDO-instroom\nInformatie deels beschikbaar",
-  arisePrecisie: "Minimale dataset verplicht vóór start triage\nOntbrekende informatie → status: 'aanvulling nodig'\nTaak wordt aangemaakt voor de poli",
-  ariseHarmony: "Triage mag starten met beperkte informatie\nOntbrekende informatie parallel aanvullen\nSignaal zichtbaar, maar geen blokkade",
+  id: "VT-01",
+  procesblok: "",
+  knelpunten: "",
+  vermoedeOorzaak: "",
+  bron: "",
+  systeem: "",
+  input: "",
+  klant: "",
+  ontwerpprincipe: "",
+  minimalViableDataset: "",
+  uitzonderingen: "",
+  arisePrecisie: "",
+  ariseHarmony: "",
   verdict: "",
   eigenaar: "",
   vervolgactie: "",
   deadline: ""
 };
 
-// Geoptimaliseerde sectie component (buiten de main app voor betere type-prestaties)
+// Geoptimaliseerde sectie component
 const Section = ({ icon: Icon, title, children, accentClass = "text-slate-600", iconBg = "bg-white border-slate-200" }) => (
   <div className="flex flex-col bg-white/60 p-5 rounded-xl border border-white/40 shadow-sm h-full">
     <div className="flex items-center gap-3 mb-3">
@@ -35,7 +36,7 @@ const Section = ({ icon: Icon, title, children, accentClass = "text-slate-600", 
       </div>
       <h2 className="text-sm font-extrabold uppercase tracking-wide text-slate-800">{title}</h2>
     </div>
-    <div className="text-[13px] font-semibold text-slate-700 leading-relaxed space-y-1.5 mt-1">
+    <div className="text-[13px] font-semibold text-slate-700 leading-relaxed space-y-1.5 mt-1 text-left">
       {children}
     </div>
   </div>
@@ -51,7 +52,7 @@ export default function App() {
   const [isPrintingAll, setIsPrintingAll] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Stille auto-save op de achtergrond zonder de UI te triggeren
+  // Stille auto-save op de achtergrond
   useEffect(() => {
     localStorage.setItem('ddc_cards', JSON.stringify(cards));
   }, [cards]);
@@ -59,22 +60,28 @@ export default function App() {
   const activeCard = cards.find(c => c.id === activeCardId) || cards[0];
 
   const handleAddCard = () => {
-    const newId = `VT-${String(cards.length + 1).padStart(2, '0')}`;
-    const newCard = { ...initialCard, id: newId, procesblok: "Nieuw Procesblok..." };
+    const nextNum = cards.length + 1;
+    const newId = `VT-${String(nextNum).padStart(2, '0')}`;
+    const newCard = { ...initialCard, id: newId };
     const newCards = [...cards, newCard];
     setCards(newCards);
     setActiveCardId(newId);
   };
 
   const handleDeleteCard = (id) => {
-    if (cards.length === 1) return alert("Je kunt de laatste kaart niet verwijderen.");
+    if (cards.length === 1) {
+      setCards([initialCard]);
+      setActiveCardId(initialCard.id);
+      return;
+    }
     const newCards = cards.filter(c => c.id !== id);
     setCards(newCards);
     if (activeCardId === id) setActiveCardId(newCards[0].id);
   };
 
   const handleChange = (id, field, value) => {
-    setCards(cards.map(c => c.id === id ? { ...c, [field]: value } : c));
+    // We laten 'id' hier staan voor de interne logica, maar de input is verwijderd uit de UI
+    setCards(prevCards => prevCards.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
   const handleExportData = () => {
@@ -100,7 +107,7 @@ export default function App() {
           setActiveCardId(importedCards[0].id);
         }
       } catch (error) {
-        alert("Fout bij het importeren. Zorg dat het een geldig JSON-bestand is.");
+        console.error("Import error");
       }
     };
     reader.readAsText(file);
@@ -108,29 +115,29 @@ export default function App() {
   };
 
   const renderList = (text) => {
-    if (!text) return null;
+    if (!text) return <span className="text-slate-300 italic font-normal text-xs uppercase tracking-tight">Geen invoer...</span>;
     return text.split('\n').filter(line => line.trim() !== '').map((item, i) => (
-      <li key={i} className="relative pl-5 before:content-[''] before:absolute before:left-0 before:top-[8px] before:w-1.5 before:h-1.5 before:bg-slate-400 before:rounded-full">
+      <li key={i} className="relative pl-5 before:content-[''] before:absolute before:left-0 before:top-[8px] before:w-1.5 before:h-1.5 before:bg-slate-400 before:rounded-full text-left">
         {item}
       </li>
     ));
   };
 
   const renderGherkin = (text) => {
-    if (!text) return null;
+    if (!text) return <span className="text-slate-300 italic font-normal text-xs uppercase tracking-tight">Geen invoer...</span>;
     return text.split('\n').filter(line => line.trim() !== '').map((item, i) => {
       const parts = item.trim().split(' ');
       const keyword = parts[0];
       const rest = parts.slice(1).join(' ');
       if (['GEGEVEN', 'WANNEER', 'DAN', 'EN', 'GIVEN', 'WHEN', 'THEN', 'AND'].includes(keyword.toUpperCase())) {
         return (
-          <div key={i} className="mb-1.5">
+          <div key={i} className="mb-1.5 text-left">
             <span className="font-extrabold uppercase text-slate-800 text-[11px] tracking-wider mr-2">{keyword}</span> 
             <span className="text-slate-700">{rest}</span>
           </div>
         );
       }
-      return <div key={i} className="mb-1.5">{item}</div>;
+      return <div key={i} className="mb-1.5 text-left">{item}</div>;
     });
   };
 
@@ -181,14 +188,14 @@ export default function App() {
       )}
 
       {isSidebarOpen && (
-        <div className="w-[420px] shrink-0 bg-white border-r border-slate-200 shadow-2xl flex flex-col z-20 no-print h-full">
+        <div className="w-[420px] shrink-0 bg-white border-r border-slate-200 shadow-2xl flex flex-col z-20 no-print h-full font-jakarta">
           <div className="p-6 border-b border-slate-100 bg-slate-900 text-white flex justify-between items-center">
               <div>
                   <h1 className="font-bold text-lg flex items-center gap-2">
                       <LayoutTemplate className="w-5 h-5 text-sky-400" />
                       DDC Builder
                   </h1>
-                  <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Design Decision Tool</p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Nieuw Project</p>
               </div>
               <div className="flex gap-2">
                 <input type="file" accept=".json" ref={fileInputRef} onChange={handleImportData} className="hidden" />
@@ -210,7 +217,7 @@ export default function App() {
 
           <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
               <select className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900" value={activeCardId} onChange={(e) => setActiveCardId(e.target.value)}>
-                  {cards.map(c => <option key={c.id} value={c.id}>{c.id} - {c.procesblok}</option>)}
+                  {cards.map(c => <option key={c.id} value={c.id}>{c.id} - {c.procesblok || "Naamloos"}</option>)}
               </select>
               <button onClick={handleAddCard} className="p-2 bg-slate-900 hover:bg-slate-800 text-white rounded-md transition-colors" title="Nieuwe kaart"><Plus className="w-4 h-4" /></button>
               <button onClick={() => handleDeleteCard(activeCardId)} className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md transition-colors" title="Verwijderen"><Trash2 className="w-4 h-4" /></button>
@@ -219,14 +226,10 @@ export default function App() {
           <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50/50">
               <div className="space-y-4">
                   <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">Header</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                      <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">DDC-ID</label>
-                          <input type="text" value={activeCard?.id || ""} onChange={(e) => handleChange(activeCardId, 'id', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
-                      </div>
+                  <div className="grid grid-cols-1 gap-4">
                       <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Procesblok</label>
-                          <input type="text" value={activeCard?.procesblok || ""} onChange={(e) => handleChange(activeCardId, 'procesblok', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
+                          <input type="text" value={activeCard?.procesblok || ""} onChange={(e) => handleChange(activeCardId, 'procesblok', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" placeholder="Bijv. Aanmelding..." />
                       </div>
                   </div>
               </div>
@@ -273,7 +276,7 @@ export default function App() {
                   <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">3. Randvoorwaarden</h3>
                   <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Ontwerpprincipe (Gherkin)</label>
-                      <textarea rows="3" value={activeCard?.ontwerpprincipe || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpprincipe', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none font-mono text-xs"></textarea>
+                      <textarea rows="3" value={activeCard?.ontwerpprincipe || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpprincipe', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none font-mono text-xs" placeholder="GEGEVEN... WANNEER... DAN..."></textarea>
                   </div>
                   <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Uitzonderingen</label>
@@ -290,6 +293,24 @@ export default function App() {
                   <div>
                       <label className="block text-[10px] font-bold text-purple-600 uppercase tracking-wide mb-1">ARISE Harmony</label>
                       <textarea rows="3" value={activeCard?.ariseHarmony || ""} onChange={(e) => handleChange(activeCardId, 'ariseHarmony', e.target.value)} className="w-full border border-purple-200 bg-purple-50/30 rounded-md p-2 text-sm resize-none"></textarea>
+                  </div>
+              </div>
+
+              <div className="space-y-4">
+                  <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">5. Besluit & Actie</h3>
+                  <div className="grid grid-cols-1 gap-4 pb-10">
+                      <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Eigenaar</label>
+                          <input type="text" value={activeCard?.eigenaar || ""} onChange={(e) => handleChange(activeCardId, 'eigenaar', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Vervolgactie</label>
+                          <input type="text" value={activeCard?.vervolgactie || ""} onChange={(e) => handleChange(activeCardId, 'vervolgactie', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
+                      </div>
+                      <div>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Deadline</label>
+                          <input type="text" value={activeCard?.deadline || ""} onChange={(e) => handleChange(activeCardId, 'deadline', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
+                      </div>
                   </div>
               </div>
 
@@ -310,12 +331,12 @@ export default function App() {
                         <div className="flex justify-between items-center p-6 lg:px-10 bg-slate-900 text-white rounded-t-2xl print:rounded-t-[14px]">
                             <div className="flex items-center gap-6">
                                 <div className="bg-sky-500/20 text-sky-300 border border-sky-400/30 px-4 py-1.5 rounded-md flex flex-col items-center">
-                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-80 mb-0.5">DDC-ID</span>
+                                    <span className="text-[9px] font-black uppercase tracking-widest opacity-80 mb-0.5 text-sky-300">DDC-ID</span>
                                     <span className="text-xl font-bold leading-none">{card.id}</span>
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold tracking-[0.2em] text-slate-400 uppercase mb-1">Procesblok</p>
-                                    <h1 className="text-2xl font-black tracking-tight">{card.procesblok}</h1>
+                                    <h1 className="text-2xl font-black tracking-tight">{card.procesblok || <span className="opacity-30 italic">Nog geen naam...</span>}</h1>
                                 </div>
                             </div>
                         </div>
@@ -323,7 +344,7 @@ export default function App() {
                         <div className="p-6 lg:p-8 flex flex-col gap-5 bg-white flex-1">
                             <div className="bg-orange-50/50 rounded-xl border border-orange-100 p-5">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-600 mb-4 ml-1">1. Probleem & Oorzaak</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
                                     <Section icon={AlertTriangle} title="Knelpunten" accentClass="text-orange-600" iconBg="border-orange-200">
                                         <ul className="space-y-1.5">{renderList(card.knelpunten)}</ul>
                                     </Section>
@@ -335,7 +356,7 @@ export default function App() {
 
                             <div className="bg-blue-50/40 rounded-xl border border-blue-100 p-5">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600 mb-4 ml-1">2. Data & Informatiestroom</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
                                     <div className="flex flex-col bg-white/70 p-5 rounded-xl border border-white/50 shadow-sm h-full">
                                         <div className="flex items-center gap-3 mb-4">
                                             <div className="p-1.5 rounded-lg border border-indigo-200 bg-white shadow-sm">
@@ -346,19 +367,19 @@ export default function App() {
                                         <div className="grid grid-cols-1 gap-y-2 text-[13px]">
                                             <div className="flex items-center border-b border-slate-100/80 pb-1.5">
                                                 <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Bron</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.bron}</span>
+                                                <span className="font-bold text-slate-700 flex-1">{card.bron || "—"}</span>
                                             </div>
                                             <div className="flex items-center border-b border-slate-100/80 pb-1.5">
                                                 <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Systeem</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.systeem}</span>
+                                                <span className="font-bold text-slate-700 flex-1">{card.systeem || "—"}</span>
                                             </div>
                                             <div className="flex items-center border-b border-slate-100/80 pb-1.5">
                                                 <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Input</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.input}</span>
+                                                <span className="font-bold text-slate-700 flex-1">{card.input || "—"}</span>
                                             </div>
                                             <div className="flex items-center">
                                                 <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Klant</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.klant}</span>
+                                                <span className="font-bold text-slate-700 flex-1">{card.klant || "—"}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -370,7 +391,7 @@ export default function App() {
 
                             <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 mb-4 ml-1">3. Randvoorwaarden</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
                                     <Section icon={Target} title="Ontwerpprincipe" accentClass="text-slate-600" iconBg="border-slate-300">
                                         <div className="space-y-1.5 bg-slate-100/50 p-3 rounded-lg border border-slate-100/80 text-[12px]">
                                             {renderGherkin(card.ontwerpprincipe)}
@@ -384,12 +405,12 @@ export default function App() {
 
                             <div className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-5">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 mb-4 ml-1">4. Ontwerprichtingen</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
                                     <Section icon={CheckCircle2} title="ARISE Precisie" accentClass="text-emerald-600" iconBg="border-emerald-300 bg-emerald-50">
-                                        <ul className="space-y-1.5 text-slate-800">{renderList(card.arisePrecisie)}</ul>
+                                        <ul className="space-y-1.5 text-slate-800 font-semibold">{renderList(card.arisePrecisie)}</ul>
                                     </Section>
                                     <Section icon={RefreshCw} title="ARISE Harmony" accentClass="text-violet-600" iconBg="border-violet-300 bg-violet-50">
-                                        <ul className="space-y-1.5 text-slate-800">{renderList(card.ariseHarmony)}</ul>
+                                        <ul className="space-y-1.5 text-slate-800 font-semibold">{renderList(card.ariseHarmony)}</ul>
                                     </Section>
                                 </div>
                             </div>
@@ -408,18 +429,18 @@ export default function App() {
                                 </button>
                             </div>
 
-                            <div className="flex gap-6 w-full lg:w-auto">
+                            <div className="flex gap-6 w-full lg:w-auto text-left">
                                 <div className="flex flex-col flex-1 lg:w-44">
                                     <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Eigenaar</label>
-                                    <input type="text" value={card.eigenaar || ""} onChange={(e) => handleChange(card.id, 'eigenaar', e.target.value)} className="minimal-input" />
+                                    <input type="text" value={card.eigenaar || ""} onChange={(e) => handleChange(card.id, 'eigenaar', e.target.value)} className="minimal-input" placeholder="..." />
                                 </div>
                                 <div className="flex flex-col flex-1 lg:w-44">
                                     <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Vervolgactie</label>
-                                    <input type="text" value={card.vervolgactie || ""} onChange={(e) => handleChange(card.id, 'vervolgactie', e.target.value)} className="minimal-input" />
+                                    <input type="text" value={card.vervolgactie || ""} onChange={(e) => handleChange(card.id, 'vervolgactie', e.target.value)} className="minimal-input" placeholder="..." />
                                 </div>
                                 <div className="flex flex-col flex-1 lg:w-36 relative">
                                     <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Deadline</label>
-                                    <input type="text" value={card.deadline || ""} onChange={(e) => handleChange(card.id, 'deadline', e.target.value)} className="minimal-input pr-6" />
+                                    <input type="text" value={card.deadline || ""} onChange={(e) => handleChange(card.id, 'deadline', e.target.value)} className="minimal-input pr-6" placeholder="..." />
                                     <CalendarDays className="w-4 h-4 text-slate-300 absolute right-0 bottom-1.5 pointer-events-none" />
                                 </div>
                             </div>
