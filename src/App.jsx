@@ -3,7 +3,7 @@ import {
   Plus, Printer, Trash2, AlertTriangle, 
   CheckCircle2, RefreshCw, Database, Settings2, 
   AlertOctagon, CalendarDays, Menu, 
-  ChevronLeft, Check, Network, Search, Target, LayoutTemplate, Download, HardDrive, Upload, Save
+  ChevronLeft, Check, Network, Search, Target, LayoutTemplate, Download, Upload, Save
 } from 'lucide-react';
 
 const initialCard = {
@@ -26,6 +26,21 @@ const initialCard = {
   deadline: ""
 };
 
+// Geoptimaliseerde sectie component (buiten de main app voor betere type-prestaties)
+const Section = ({ icon: Icon, title, children, accentClass = "text-slate-600", iconBg = "bg-white border-slate-200" }) => (
+  <div className="flex flex-col bg-white/60 p-5 rounded-xl border border-white/40 shadow-sm h-full">
+    <div className="flex items-center gap-3 mb-3">
+      <div className={`p-1.5 rounded-lg border ${iconBg} ${accentClass} bg-white shadow-sm`}>
+        <Icon className="w-4 h-4 stroke-[2.5px]" />
+      </div>
+      <h2 className="text-sm font-extrabold uppercase tracking-wide text-slate-800">{title}</h2>
+    </div>
+    <div className="text-[13px] font-semibold text-slate-700 leading-relaxed space-y-1.5 mt-1">
+      {children}
+    </div>
+  </div>
+);
+
 export default function App() {
   const [cards, setCards] = useState(() => {
     const saved = localStorage.getItem('ddc_cards');
@@ -34,14 +49,11 @@ export default function App() {
   const [activeCardId, setActiveCardId] = useState(cards[0]?.id || initialCard.id);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isPrintingAll, setIsPrintingAll] = useState(false);
-  const [saveStatus, setSaveStatus] = useState("saved");
   const fileInputRef = useRef(null);
 
+  // Stille auto-save op de achtergrond zonder de UI te triggeren
   useEffect(() => {
-    setSaveStatus("saving");
     localStorage.setItem('ddc_cards', JSON.stringify(cards));
-    const timer = setTimeout(() => setSaveStatus("saved"), 500);
-    return () => clearTimeout(timer);
   }, [cards]);
 
   const activeCard = cards.find(c => c.id === activeCardId) || cards[0];
@@ -132,20 +144,6 @@ export default function App() {
     setTimeout(() => window.print(), 100);
   };
 
-  const Section = ({ icon: Icon, title, children, accentClass = "text-slate-600", iconBg = "bg-white border-slate-200" }) => (
-    <div className="flex flex-col bg-white/60 p-5 rounded-xl border border-white/40 shadow-sm h-full">
-      <div className="flex items-center gap-3 mb-3">
-        <div className={`p-1.5 rounded-lg border ${iconBg} ${accentClass} bg-white shadow-sm`}>
-          <Icon className="w-4 h-4 stroke-[2.5px]" />
-        </div>
-        <h2 className="text-sm font-extrabold uppercase tracking-wide text-slate-800">{title}</h2>
-      </div>
-      <div className="text-[13px] font-semibold text-slate-700 leading-relaxed space-y-1.5 mt-1">
-        {children}
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex h-screen bg-[#f1f5f9] font-sans overflow-hidden relative">
       <style dangerouslySetInnerHTML={{__html: `
@@ -190,13 +188,7 @@ export default function App() {
                       <LayoutTemplate className="w-5 h-5 text-sky-400" />
                       DDC Builder
                   </h1>
-                  <div className="flex items-center gap-1 mt-1 text-slate-400">
-                      {saveStatus === "saving" ? (
-                        <><span className="w-3 h-3 rounded-full bg-amber-400 animate-pulse" /><span className="text-[10px] uppercase tracking-widest">Opslaan...</span></>
-                      ) : (
-                        <><HardDrive className="w-3 h-3 text-emerald-400" /><span className="text-[10px] uppercase tracking-widest text-emerald-400">Lokaal opgeslagen</span></>
-                      )}
-                  </div>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-400 mt-1">Design Decision Tool</p>
               </div>
               <div className="flex gap-2">
                 <input type="file" accept=".json" ref={fileInputRef} onChange={handleImportData} className="hidden" />
