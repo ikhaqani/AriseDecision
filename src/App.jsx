@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, Printer, Trash2, AlertTriangle, 
   CheckCircle2, RefreshCw, Database, Settings2, 
-  AlertOctagon, CalendarDays, Menu, 
-  ChevronLeft, Check, Network, Search, Target, LayoutTemplate, Download, Upload, Save,
-  ZoomIn, ZoomOut, Type
+  CalendarDays, Menu, ChevronLeft, Check, Search, 
+  LayoutTemplate, Download, Upload, Save,
+  ZoomIn, ZoomOut, Type, Wrench, Waypoints, MonitorSmartphone, Binary
 } from 'lucide-react';
 
 const initialCard = {
@@ -12,13 +12,11 @@ const initialCard = {
   procesblok: "",
   knelpunten: "",
   vermoedeOorzaak: "",
-  bron: "",
-  systeem: "",
-  input: "",
-  klant: "",
-  ontwerpprincipe: "",
+  workarounds: "",
   minimalViableDataset: "",
-  uitzonderingen: "",
+  ontwerpProces: "",
+  ontwerpSysteem: "",
+  ontwerpData: "",
   arisePrecisie: "",
   ariseHarmony: "",
   verdict: "",
@@ -50,7 +48,7 @@ export default function App() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isPrintingAll, setIsPrintingAll] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1); 
-  const [fontScale, setFontScale] = useState(1); // State voor de lettergrootte
+  const [fontScale, setFontScale] = useState(1); 
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -113,12 +111,12 @@ export default function App() {
     e.target.value = null; 
   };
 
-  // Zoom handlers (Beïnvloedt PDF/Print NIET)
+  // Zoom handlers 
   const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 1.5));
   const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
   const handleZoomReset = () => setZoomLevel(1);
 
-  // Font handlers (Beïnvloedt PDF/Print WEL - handig om meer tekst te laten passen)
+  // Font handlers 
   const handleFontIncrease = () => setFontScale(prev => Math.min(prev + 0.05, 1.4));
   const handleFontDecrease = () => setFontScale(prev => Math.max(prev - 0.05, 0.7));
   const handleFontReset = () => setFontScale(1);
@@ -130,24 +128,6 @@ export default function App() {
         {item}
       </li>
     ));
-  };
-
-  const renderGherkin = (text) => {
-    if (!text) return <span className="text-slate-300 italic font-normal text-xs uppercase tracking-tight">Geen invoer...</span>;
-    return text.split('\n').filter(line => line.trim() !== '').map((item, i) => {
-      const parts = item.trim().split(' ');
-      const keyword = parts[0];
-      const rest = parts.slice(1).join(' ');
-      if (['GEGEVEN', 'WANNEER', 'DAN', 'EN', 'GIVEN', 'WHEN', 'THEN', 'AND'].includes(keyword.toUpperCase())) {
-        return (
-          <div key={i} className="mb-1.5 text-left">
-            <span className="font-extrabold uppercase text-slate-800 text-[11px] tracking-wider mr-2">{keyword}</span> 
-            <span className="text-slate-700">{rest}</span>
-          </div>
-        );
-      }
-      return <div key={i} className="mb-1.5 text-left">{item}</div>;
-    });
   };
 
   const handlePrintAll = () => {
@@ -168,7 +148,7 @@ export default function App() {
         }
         .minimal-input:focus { border-bottom-style: solid; border-bottom-color: #0ea5e9; }
         
-        /* Dynamische Lettergrootte overrides via CSS variabelen */
+        /* Dynamische Lettergrootte overrides */
         .print-area .text-sm { font-size: calc(0.875rem * var(--font-scale)) !important; line-height: calc(1.25rem * var(--font-scale)) !important; }
         .print-area .text-xs { font-size: calc(0.75rem * var(--font-scale)) !important; line-height: calc(1rem * var(--font-scale)) !important; }
         .print-area .text-\\[13px\\] { font-size: calc(13px * var(--font-scale)) !important; line-height: calc(18px * var(--font-scale)) !important; }
@@ -190,8 +170,7 @@ export default function App() {
             .print-area {
                 position: absolute; left: 0; top: 0;
                 width: 100%; margin: 0; padding: 0; background: white !important;
-                transform: none !important; /* Forceer altijd 100% visuele zoom bij printen... */
-                /* ...maar behoud wel de var(--font-scale) voor de tekst! */
+                transform: none !important;
             }
             .print-page { page-break-after: always; break-after: page; }
             .print-page:last-child { page-break-after: auto; break-after: auto; }
@@ -206,10 +185,8 @@ export default function App() {
         </button>
       )}
 
-      {/* ZWEVEND CONTROLE PANEEL (Zoom & Lettergrootte) */}
+      {/* ZWEVEND CONTROLE PANEEL */}
       <div className="fixed bottom-6 right-8 z-30 flex items-center bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 no-print divide-x divide-slate-100">
-        
-        {/* Lettergrootte bediening */}
         <div className="flex items-center gap-1 pr-2">
             <div className="pl-2 pr-1 text-slate-400"><Type className="w-4 h-4" /></div>
             <button onClick={handleFontDecrease} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors font-bold" title="Lettertype verkleinen">
@@ -222,8 +199,6 @@ export default function App() {
               <span className="text-sm leading-none">A+</span>
             </button>
         </div>
-
-        {/* Visuele Zoom bediening */}
         <div className="flex items-center gap-1 pl-2">
             <button onClick={handleZoomOut} className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors" title="Uitzoomen (Scherm)">
               <ZoomOut className="w-4 h-4" />
@@ -297,45 +272,35 @@ export default function App() {
               </div>
 
               <div className="space-y-4">
-                  <h3 className="font-extrabold text-blue-400 uppercase tracking-widest text-[10px] mb-4">2. Informatie & Data</h3>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Bron</label>
-                        <input type="text" value={activeCard?.bron || ""} onChange={(e) => handleChange(activeCardId, 'bron', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm" />
-                    </div>
-                    <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Systeem</label>
-                        <input type="text" value={activeCard?.systeem || ""} onChange={(e) => handleChange(activeCardId, 'systeem', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm" />
-                    </div>
-                    <div className="col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Input</label>
-                        <input type="text" value={activeCard?.input || ""} onChange={(e) => handleChange(activeCardId, 'input', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm" />
-                    </div>
-                    <div className="col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Klant</label>
-                        <input type="text" value={activeCard?.klant || ""} onChange={(e) => handleChange(activeCardId, 'klant', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm" />
-                    </div>
+                  <h3 className="font-extrabold text-blue-400 uppercase tracking-widest text-[10px] mb-4">2. Huidige Situatie & Data</h3>
+                  <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Workarounds (As-Is)</label>
+                      <textarea rows="3" value={activeCard?.workarounds || ""} onChange={(e) => handleChange(activeCardId, 'workarounds', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
-                  <div className="pt-2">
+                  <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Minimal Viable Dataset</label>
                       <textarea rows="3" value={activeCard?.minimalViableDataset || ""} onChange={(e) => handleChange(activeCardId, 'minimalViableDataset', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
               </div>
 
               <div className="space-y-4">
-                  <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">3. Randvoorwaarden</h3>
+                  <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">3. Ontwerpprincipes (To-Be)</h3>
                   <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Ontwerpprincipe (Gherkin)</label>
-                      <textarea rows="3" value={activeCard?.ontwerpprincipe || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpprincipe', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none font-mono text-xs" placeholder="GEGEVEN... WANNEER... DAN..."></textarea>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Procesniveau</label>
+                      <textarea rows="2" value={activeCard?.ontwerpProces || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpProces', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
                   <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Uitzonderingen</label>
-                      <textarea rows="2" value={activeCard?.uitzonderingen || ""} onChange={(e) => handleChange(activeCardId, 'uitzonderingen', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Systeemniveau</label>
+                      <textarea rows="2" value={activeCard?.ontwerpSysteem || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpSysteem', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
+                  </div>
+                  <div>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Dataniveau</label>
+                      <textarea rows="2" value={activeCard?.ontwerpData || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpData', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
               </div>
 
               <div className="space-y-4">
-                  <h3 className="font-extrabold text-indigo-400 uppercase tracking-widest text-[10px] mb-4">4. Ontwerprichtingen</h3>
+                  <h3 className="font-extrabold text-indigo-400 uppercase tracking-widest text-[10px] mb-4">4. Opties & Richtingen</h3>
                   <div>
                       <label className="block text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1">ARISE Precisie</label>
                       <textarea rows="3" value={activeCard?.arisePrecisie || ""} onChange={(e) => handleChange(activeCardId, 'arisePrecisie', e.target.value)} className="w-full border border-emerald-200 bg-emerald-50/30 rounded-md p-2 text-sm resize-none"></textarea>
@@ -368,7 +333,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Hier wordt de visuele zoom én de CSS lettergrootte-variabele toegepast! */}
+      {/* DDC CARD DISPLAY */}
       <div className="flex-1 overflow-y-auto p-4 sm:p-10 flex justify-center items-start print:p-0 print:bg-white" >
         <div 
           className="print-area w-full font-jakarta flex flex-col items-center origin-top transition-transform duration-200 ease-in-out" 
@@ -396,6 +361,8 @@ export default function App() {
                         </div>
 
                         <div className="p-6 lg:p-8 flex flex-col gap-5 bg-white flex-1">
+                            
+                            {/* BLOK 1: PROBLEEMANALYSE */}
                             <div className="bg-orange-50/50 rounded-xl border border-orange-100 p-5">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-orange-600 mb-4 ml-1">1. Probleem & Oorzaak</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
@@ -408,57 +375,38 @@ export default function App() {
                                 </div>
                             </div>
 
+                            {/* BLOK 2: HUIDIGE SITUATIE & DATA */}
                             <div className="bg-blue-50/40 rounded-xl border border-blue-100 p-5">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600 mb-4 ml-1">2. Data & Informatiestroom</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600 mb-4 ml-1">2. Huidige Situatie & Data</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
-                                    <div className="flex flex-col bg-white/70 p-5 rounded-xl border border-white/50 shadow-sm h-full">
-                                        <div className="flex items-center gap-3 mb-4">
-                                            <div className="p-1.5 rounded-lg border border-indigo-200 bg-white shadow-sm">
-                                                <Network className="w-4 h-4 stroke-[2.5px] text-indigo-600" />
-                                            </div>
-                                            <h2 className="text-sm font-extrabold uppercase tracking-wide text-slate-800">Informatieketen</h2>
-                                        </div>
-                                        <div className="grid grid-cols-1 gap-y-2 text-[13px]">
-                                            <div className="flex items-center border-b border-slate-100/80 pb-1.5">
-                                                <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Bron</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.bron || "—"}</span>
-                                            </div>
-                                            <div className="flex items-center border-b border-slate-100/80 pb-1.5">
-                                                <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Systeem</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.systeem || "—"}</span>
-                                            </div>
-                                            <div className="flex items-center border-b border-slate-100/80 pb-1.5">
-                                                <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Input</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.input || "—"}</span>
-                                            </div>
-                                            <div className="flex items-center">
-                                                <span className="font-extrabold text-slate-400 uppercase tracking-widest w-20 text-[10px]">Klant</span>
-                                                <span className="font-bold text-slate-700 flex-1">{card.klant || "—"}</span>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    <Section icon={Wrench} title="Workarounds (As-Is)" accentClass="text-sky-600" iconBg="border-sky-200">
+                                        <ul className="space-y-1.5">{renderList(card.workarounds)}</ul>
+                                    </Section>
                                     <Section icon={Database} title="Minimal Viable Dataset" accentClass="text-blue-600" iconBg="border-blue-200">
                                         <ul className="space-y-1.5">{renderList(card.minimalViableDataset)}</ul>
                                     </Section>
                                 </div>
                             </div>
 
+                            {/* BLOK 3: ONTWERPPRINCIPES (3 KOLOMMEN) */}
                             <div className="bg-slate-50 rounded-xl border border-slate-200 p-5">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 mb-4 ml-1">3. Randvoorwaarden</h3>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
-                                    <Section icon={Target} title="Ontwerpprincipe" accentClass="text-slate-600" iconBg="border-slate-300">
-                                        <div className="space-y-1.5 bg-slate-100/50 p-3 rounded-lg border border-slate-100/80 text-[12px]">
-                                            {renderGherkin(card.ontwerpprincipe)}
-                                        </div>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500 mb-4 ml-1">3. Ontwerpprincipes (To-Be)</h3>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-left">
+                                    <Section icon={Waypoints} title="Procesniveau" accentClass="text-slate-600" iconBg="border-slate-300">
+                                        <ul className="space-y-1.5">{renderList(card.ontwerpProces)}</ul>
                                     </Section>
-                                    <Section icon={AlertOctagon} title="Uitzonderingen" accentClass="text-rose-500" iconBg="border-rose-200">
-                                        <ul className="space-y-1.5 text-slate-700">{renderList(card.uitzonderingen)}</ul>
+                                    <Section icon={MonitorSmartphone} title="Systeemniveau" accentClass="text-slate-600" iconBg="border-slate-300">
+                                        <ul className="space-y-1.5">{renderList(card.ontwerpSysteem)}</ul>
+                                    </Section>
+                                    <Section icon={Binary} title="Dataniveau" accentClass="text-slate-600" iconBg="border-slate-300">
+                                        <ul className="space-y-1.5">{renderList(card.ontwerpData)}</ul>
                                     </Section>
                                 </div>
                             </div>
 
+                            {/* BLOK 4: OPTIES & RICHTINGEN */}
                             <div className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-5">
-                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 mb-4 ml-1">4. Ontwerprichtingen</h3>
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 mb-4 ml-1">4. Opties & Richtingen</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
                                     <Section icon={CheckCircle2} title="ARISE Precisie" accentClass="text-emerald-600" iconBg="border-emerald-300 bg-emerald-50">
                                         <ul className="space-y-1.5 text-slate-800 font-semibold">{renderList(card.arisePrecisie)}</ul>
@@ -468,8 +416,10 @@ export default function App() {
                                     </Section>
                                 </div>
                             </div>
+
                         </div>
 
+                        {/* FOOTER */}
                         <div className="px-6 lg:px-10 py-5 bg-slate-50 border-t border-slate-200 rounded-b-2xl print:rounded-b-[14px] flex flex-col lg:flex-row gap-6 justify-between items-center mt-auto">
                             <div className="flex gap-2.5 flex-wrap">
                                 <button onClick={() => handleChange(card.id, 'verdict', 'akkoord')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.verdict === 'akkoord' ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'}`}>
