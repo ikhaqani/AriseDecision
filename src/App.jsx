@@ -3,10 +3,10 @@ import {
   Plus, Printer, Trash2, AlertTriangle, 
   CheckCircle2, RefreshCw, Database, Settings2, 
   AlertOctagon, CalendarDays, Menu, 
-  ChevronLeft, Check, Network, Search, Target, LayoutTemplate, Download, Upload, Save
+  ChevronLeft, Check, Network, Search, Target, LayoutTemplate, Download, Upload, Save,
+  ZoomIn, ZoomOut, Type
 } from 'lucide-react';
 
-// Blanco start-sjabloon
 const initialCard = {
   id: "VT-01",
   procesblok: "",
@@ -27,7 +27,6 @@ const initialCard = {
   deadline: ""
 };
 
-// Geoptimaliseerde sectie component
 const Section = ({ icon: Icon, title, children, accentClass = "text-slate-600", iconBg = "bg-white border-slate-200" }) => (
   <div className="flex flex-col bg-white/60 p-5 rounded-xl border border-white/40 shadow-sm h-full">
     <div className="flex items-center gap-3 mb-3">
@@ -50,9 +49,10 @@ export default function App() {
   const [activeCardId, setActiveCardId] = useState(cards[0]?.id || initialCard.id);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isPrintingAll, setIsPrintingAll] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1); 
+  const [fontScale, setFontScale] = useState(1); // State voor de lettergrootte
   const fileInputRef = useRef(null);
 
-  // Stille auto-save op de achtergrond
   useEffect(() => {
     localStorage.setItem('ddc_cards', JSON.stringify(cards));
   }, [cards]);
@@ -80,7 +80,6 @@ export default function App() {
   };
 
   const handleChange = (id, field, value) => {
-    // We laten 'id' hier staan voor de interne logica, maar de input is verwijderd uit de UI
     setCards(prevCards => prevCards.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
@@ -114,6 +113,16 @@ export default function App() {
     e.target.value = null; 
   };
 
+  // Zoom handlers (Beïnvloedt PDF/Print NIET)
+  const handleZoomIn = () => setZoomLevel(prev => Math.min(prev + 0.1, 1.5));
+  const handleZoomOut = () => setZoomLevel(prev => Math.max(prev - 0.1, 0.5));
+  const handleZoomReset = () => setZoomLevel(1);
+
+  // Font handlers (Beïnvloedt PDF/Print WEL - handig om meer tekst te laten passen)
+  const handleFontIncrease = () => setFontScale(prev => Math.min(prev + 0.05, 1.4));
+  const handleFontDecrease = () => setFontScale(prev => Math.max(prev - 0.05, 0.7));
+  const handleFontReset = () => setFontScale(1);
+
   const renderList = (text) => {
     if (!text) return <span className="text-slate-300 italic font-normal text-xs uppercase tracking-tight">Geen invoer...</span>;
     return text.split('\n').filter(line => line.trim() !== '').map((item, i) => (
@@ -141,11 +150,6 @@ export default function App() {
     });
   };
 
-  const handlePrintSingle = () => {
-    setIsPrintingAll(false);
-    setTimeout(() => window.print(), 100);
-  };
-
   const handlePrintAll = () => {
     setIsPrintingAll(true);
     setTimeout(() => window.print(), 100);
@@ -163,6 +167,19 @@ export default function App() {
             outline: none; transition: border-color 0.2s;
         }
         .minimal-input:focus { border-bottom-style: solid; border-bottom-color: #0ea5e9; }
+        
+        /* Dynamische Lettergrootte overrides via CSS variabelen */
+        .print-area .text-sm { font-size: calc(0.875rem * var(--font-scale)) !important; line-height: calc(1.25rem * var(--font-scale)) !important; }
+        .print-area .text-xs { font-size: calc(0.75rem * var(--font-scale)) !important; line-height: calc(1rem * var(--font-scale)) !important; }
+        .print-area .text-\\[13px\\] { font-size: calc(13px * var(--font-scale)) !important; line-height: calc(18px * var(--font-scale)) !important; }
+        .print-area .text-\\[11px\\] { font-size: calc(11px * var(--font-scale)) !important; line-height: calc(16px * var(--font-scale)) !important; }
+        .print-area .text-\\[10px\\] { font-size: calc(10px * var(--font-scale)) !important; line-height: calc(14px * var(--font-scale)) !important; }
+        .print-area .text-\\[9px\\] { font-size: calc(9px * var(--font-scale)) !important; line-height: calc(12px * var(--font-scale)) !important; }
+        .print-area .text-lg { font-size: calc(1.125rem * var(--font-scale)) !important; line-height: calc(1.75rem * var(--font-scale)) !important; }
+        .print-area .text-xl { font-size: calc(1.25rem * var(--font-scale)) !important; line-height: calc(1.75rem * var(--font-scale)) !important; }
+        .print-area .text-2xl { font-size: calc(1.5rem * var(--font-scale)) !important; line-height: calc(2rem * var(--font-scale)) !important; }
+        .print-area textarea, .print-area input { font-size: calc(0.875rem * var(--font-scale)) !important; }
+        
         @media print {
             body * { visibility: hidden; }
             .print-area, .print-area * {
@@ -173,6 +190,8 @@ export default function App() {
             .print-area {
                 position: absolute; left: 0; top: 0;
                 width: 100%; margin: 0; padding: 0; background: white !important;
+                transform: none !important; /* Forceer altijd 100% visuele zoom bij printen... */
+                /* ...maar behoud wel de var(--font-scale) voor de tekst! */
             }
             .print-page { page-break-after: always; break-after: page; }
             .print-page:last-child { page-break-after: auto; break-after: auto; }
@@ -186,6 +205,37 @@ export default function App() {
           <Menu className="w-5 h-5" />
         </button>
       )}
+
+      {/* ZWEVEND CONTROLE PANEEL (Zoom & Lettergrootte) */}
+      <div className="fixed bottom-6 right-8 z-30 flex items-center bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 no-print divide-x divide-slate-100">
+        
+        {/* Lettergrootte bediening */}
+        <div className="flex items-center gap-1 pr-2">
+            <div className="pl-2 pr-1 text-slate-400"><Type className="w-4 h-4" /></div>
+            <button onClick={handleFontDecrease} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors font-bold" title="Lettertype verkleinen">
+              <span className="text-[10px] leading-none">A-</span>
+            </button>
+            <button onClick={handleFontReset} className="px-1 py-1 text-[11px] font-black tracking-widest text-slate-700 hover:text-sky-600 transition-colors text-center min-w-[3rem]" title="Reset Lettertype">
+              {Math.round(fontScale * 100)}%
+            </button>
+            <button onClick={handleFontIncrease} className="w-8 h-8 flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors font-bold" title="Lettertype vergroten">
+              <span className="text-sm leading-none">A+</span>
+            </button>
+        </div>
+
+        {/* Visuele Zoom bediening */}
+        <div className="flex items-center gap-1 pl-2">
+            <button onClick={handleZoomOut} className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors" title="Uitzoomen (Scherm)">
+              <ZoomOut className="w-4 h-4" />
+            </button>
+            <button onClick={handleZoomReset} className="px-1 py-1 text-[11px] font-black tracking-widest text-slate-700 hover:text-sky-600 transition-colors text-center min-w-[3rem]" title="Reset Zoom">
+              {Math.round(zoomLevel * 100)}%
+            </button>
+            <button onClick={handleZoomIn} className="p-2 text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-full transition-colors" title="Inzoomen (Scherm)">
+              <ZoomIn className="w-4 h-4" />
+            </button>
+        </div>
+      </div>
 
       {isSidebarOpen && (
         <div className="w-[420px] shrink-0 bg-white border-r border-slate-200 shadow-2xl flex flex-col z-20 no-print h-full font-jakarta">
@@ -318,14 +368,18 @@ export default function App() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto p-4 sm:p-10 flex justify-center items-start print:p-0 print:bg-white">
-        <div className="print-area w-full max-w-[1100px] font-jakarta flex flex-col items-center">
+      {/* Hier wordt de visuele zoom én de CSS lettergrootte-variabele toegepast! */}
+      <div className="flex-1 overflow-y-auto p-4 sm:p-10 flex justify-center items-start print:p-0 print:bg-white" >
+        <div 
+          className="print-area w-full font-jakarta flex flex-col items-center origin-top transition-transform duration-200 ease-in-out" 
+          style={{ transform: `scale(${zoomLevel})`, marginBottom: `${(zoomLevel - 1) * 100}px`, '--font-scale': fontScale }}
+        >
             {cards.map((card) => {
                 const isActive = card.id === activeCardId;
                 const visibilityClass = isActive ? "block print:block" : (isPrintingAll ? "hidden print:block" : "hidden print:hidden");
 
                 return (
-                <div key={card.id} className={`print-page w-full ${visibilityClass} mb-8 print:mb-0`}>
+                <div key={card.id} className={`print-page w-full max-w-[1100px] ${visibilityClass} mb-8 print:mb-0`}>
                     <div className="bg-white rounded-2xl flex flex-col relative shadow-[0_15px_40px_-15px_rgba(0,0,0,0.1)] border border-slate-200 print:border-2 print:border-slate-800 print:shadow-none print:h-[96vh] print:rounded-2xl print:overflow-hidden">
                         
                         <div className="flex justify-between items-center p-6 lg:px-10 bg-slate-900 text-white rounded-t-2xl print:rounded-t-[14px]">
