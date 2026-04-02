@@ -20,10 +20,8 @@ const initialCard = {
   ontwerpData: "",
   arisePrecisie: "",
   ariseHarmony: "",
-  verdict: "",
-  eigenaar: "",
-  vervolgactie: "",
-  deadline: ""
+  gekozenRichting: "", // 'precisie' of 'harmony'
+  opmerkingen: ""
 };
 
 const Section = ({ icon: Icon, title, children, accentClass = "text-slate-600", iconBg = "bg-white border-slate-200" }) => (
@@ -235,13 +233,6 @@ export default function App() {
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .minimal-input {
-            width: 100%; background: transparent; border: none;
-            border-bottom: 2px dotted #cbd5e1; padding: 4px 0;
-            font-size: inherit; font-weight: 800; color: #0f172a;
-            outline: none; transition: border-color 0.2s;
-        }
-        .minimal-input:focus { border-bottom-style: solid; border-bottom-color: #0ea5e9; }
         
         /* Dynamische Lettergrootte overrides */
         .print-area .text-sm { font-size: calc(0.875rem * var(--font-scale)) !important; line-height: calc(1.25rem * var(--font-scale)) !important; }
@@ -415,19 +406,25 @@ export default function App() {
               </div>
 
               <div className="space-y-4">
-                  <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">5. Besluit & Actie</h3>
+                  <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">5. Besluit & Opmerkingen</h3>
                   <div className="grid grid-cols-1 gap-4 pb-10">
-                      <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Eigenaar</label>
-                          <input type="text" value={activeCard?.eigenaar || ""} onChange={(e) => handleChange(activeCardId, 'eigenaar', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
+                      <div className="flex gap-2">
+                          <button 
+                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'precisie')} 
+                              className={`flex-1 py-2 rounded-md border text-xs font-bold transition-colors ${activeCard?.gekozenRichting === 'precisie' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                          >
+                              Precisie
+                          </button>
+                          <button 
+                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'harmony')} 
+                              className={`flex-1 py-2 rounded-md border text-xs font-bold transition-colors ${activeCard?.gekozenRichting === 'harmony' ? 'bg-violet-500 text-white border-violet-500' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                          >
+                              Harmony
+                          </button>
                       </div>
                       <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Vervolgactie</label>
-                          <input type="text" value={activeCard?.vervolgactie || ""} onChange={(e) => handleChange(activeCardId, 'vervolgactie', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
-                      </div>
-                      <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Deadline</label>
-                          <input type="text" value={activeCard?.deadline || ""} onChange={(e) => handleChange(activeCardId, 'deadline', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm font-semibold" />
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Opmerkingen / Toelichting</label>
+                          <textarea rows="3" value={activeCard?.opmerkingen || ""} onChange={(e) => handleChange(activeCardId, 'opmerkingen', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                       </div>
                   </div>
               </div>
@@ -521,35 +518,38 @@ export default function App() {
                             </div>
                         </div>
 
-                        <div className="px-6 lg:px-10 py-5 bg-slate-50 border-t border-slate-200 rounded-b-[14px] print:rounded-b-[14px] flex flex-col lg:flex-row gap-6 justify-between items-center mt-auto">
-                            <div className="flex gap-2.5 flex-wrap">
-                                <button onClick={() => handleChange(card.id, 'verdict', 'akkoord')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.verdict === 'akkoord' ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'}`}>
-                                    {card.verdict === 'akkoord' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Akkoord
-                                </button>
-                                <button onClick={() => handleChange(card.id, 'verdict', 'aanpassen')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.verdict === 'aanpassen' ? 'bg-amber-500 border-amber-500 text-white shadow-md shadow-amber-200' : 'bg-white border-slate-200 text-slate-500 hover:border-amber-300 hover:text-amber-600'}`}>
-                                    {card.verdict === 'aanpassen' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Aanpassen
-                                </button>
-                                <button onClick={() => handleChange(card.id, 'verdict', 'uitzoeken')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.verdict === 'uitzoeken' ? 'bg-sky-500 border-sky-500 text-white shadow-md shadow-sky-200' : 'bg-white border-slate-200 text-slate-500 hover:border-sky-300 hover:text-sky-600'}`}>
-                                    {card.verdict === 'uitzoeken' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Uitzoeken
-                                </button>
-                            </div>
+                        {/* NIEUWE FOOTER (Besluit & Opmerkingen) */}
+                        <div className="px-6 lg:px-10 py-5 bg-slate-50 border-t border-slate-200 rounded-b-[14px] print:rounded-b-[14px] flex flex-col gap-4 mt-auto">
+                            <div className="flex flex-col lg:flex-row gap-6 justify-between items-start w-full">
+                                
+                                {/* Linker deel: Knoppen Precisie/Harmony */}
+                                <div className="flex flex-col gap-2 shrink-0">
+                                    <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">Gekozen Ontwerp</span>
+                                    <div className="flex gap-2.5">
+                                        <button onClick={() => handleChange(card.id, 'gekozenRichting', 'precisie')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.gekozenRichting === 'precisie' ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'}`}>
+                                            {card.gekozenRichting === 'precisie' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Precisie
+                                        </button>
+                                        <button onClick={() => handleChange(card.id, 'gekozenRichting', 'harmony')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.gekozenRichting === 'harmony' ? 'bg-violet-500 border-violet-500 text-white shadow-md shadow-violet-200' : 'bg-white border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-600'}`}>
+                                            {card.gekozenRichting === 'harmony' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Harmony
+                                        </button>
+                                    </div>
+                                </div>
 
-                            <div className="flex gap-6 w-full lg:w-auto text-left">
-                                <div className="flex flex-col flex-1 lg:w-44">
-                                    <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Eigenaar</label>
-                                    <input type="text" value={card.eigenaar || ""} onChange={(e) => handleChange(card.id, 'eigenaar', e.target.value)} className="minimal-input" placeholder="..." />
+                                {/* Rechter deel: Opmerkingen vrij tekstveld */}
+                                <div className="flex flex-col flex-1 w-full text-left">
+                                    <label className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Opmerkingen / Toelichting</label>
+                                    <textarea 
+                                      value={card.opmerkingen || ""} 
+                                      onChange={(e) => handleChange(card.id, 'opmerkingen', e.target.value)} 
+                                      className="w-full bg-white border border-slate-200 rounded-lg p-3 text-sm font-semibold text-slate-700 resize-none outline-none focus:ring-2 focus:ring-sky-500/50 transition-all overflow-hidden" 
+                                      placeholder="Typ hier eventuele opmerkingen of toelichting bij het besluit..."
+                                      rows="3"
+                                    ></textarea>
                                 </div>
-                                <div className="flex flex-col flex-1 lg:w-44">
-                                    <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Vervolgactie</label>
-                                    <input type="text" value={card.vervolgactie || ""} onChange={(e) => handleChange(card.id, 'vervolgactie', e.target.value)} className="minimal-input" placeholder="..." />
-                                </div>
-                                <div className="flex flex-col flex-1 lg:w-36 relative">
-                                    <label className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.2em] mb-1">Deadline</label>
-                                    <input type="text" value={card.deadline || ""} onChange={(e) => handleChange(card.id, 'deadline', e.target.value)} className="minimal-input pr-6" placeholder="..." />
-                                    <CalendarDays className="w-4 h-4 text-slate-300 absolute right-0 bottom-1.5 pointer-events-none" />
-                                </div>
+                                
                             </div>
                         </div>
+
                     </div>
                 </div>
                 );
