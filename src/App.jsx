@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, Printer, Trash2, AlertTriangle, 
   CheckCircle2, RefreshCw, Database, Settings2, 
-  CalendarDays, Menu, ChevronLeft, Check, Search, 
+  CalendarDays, Menu, ChevronLeft, ChevronRight, Check, Search, 
   LayoutTemplate, Download, Upload, Save,
   ZoomIn, ZoomOut, Type, Wrench, Waypoints, MonitorSmartphone, Binary,
   FileText, Loader2
@@ -18,9 +18,9 @@ const initialCard = {
   ontwerpProces: "",
   ontwerpSysteem: "",
   ontwerpData: "",
-  arisePrecisie: "",
-  ariseHarmony: "",
-  gekozenRichting: "", // 'precisie' of 'harmony'
+  ontwerpA: "",
+  ontwerpB: "",
+  gekozenRichting: "", // 'A' of 'B'
   opmerkingen: ""
 };
 
@@ -41,8 +41,23 @@ const Section = ({ icon: Icon, title, children, accentClass = "text-slate-600", 
 export default function App() {
   const [cards, setCards] = useState(() => {
     const saved = localStorage.getItem('ddc_cards');
-    return saved ? JSON.parse(saved) : [initialCard];
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        // Migreer oude velden (arisePrecisie/ariseHarmony) naar de nieuwe als ze bestaan
+        return parsed.map(c => ({
+          ...c,
+          ontwerpA: c.ontwerpA || c.arisePrecisie || "",
+          ontwerpB: c.ontwerpB || c.ariseHarmony || "",
+          gekozenRichting: c.gekozenRichting === 'precisie' ? 'A' : (c.gekozenRichting === 'harmony' ? 'B' : c.gekozenRichting)
+        }));
+      } catch (e) {
+        return [initialCard];
+      }
+    }
+    return [initialCard];
   });
+  
   const [activeCardId, setActiveCardId] = useState(cards[0]?.id || initialCard.id);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   
@@ -59,6 +74,7 @@ export default function App() {
   }, [cards]);
 
   const activeCard = cards.find(c => c.id === activeCardId) || cards[0];
+  const currentIndex = cards.findIndex(c => c.id === activeCardId);
 
   const handleAddCard = () => {
     const nextNum = cards.length + 1;
@@ -84,6 +100,19 @@ export default function App() {
     setCards(prevCards => prevCards.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
+  // Navigatie handlers
+  const handleNextCard = () => {
+    if (currentIndex < cards.length - 1) {
+      setActiveCardId(cards[currentIndex + 1].id);
+    }
+  };
+
+  const handlePrevCard = () => {
+    if (currentIndex > 0) {
+      setActiveCardId(cards[currentIndex - 1].id);
+    }
+  };
+
   const handleExportData = () => {
     const dataStr = JSON.stringify(cards); 
     const blob = new Blob([dataStr], { type: "application/json" });
@@ -103,8 +132,15 @@ export default function App() {
       try {
         const importedCards = JSON.parse(event.target.result);
         if (Array.isArray(importedCards) && importedCards.length > 0) {
-          setCards(importedCards);
-          setActiveCardId(importedCards[0].id);
+          // Migreer oude bestanden bij import
+          const migratedCards = importedCards.map(c => ({
+             ...c,
+             ontwerpA: c.ontwerpA || c.arisePrecisie || "",
+             ontwerpB: c.ontwerpB || c.ariseHarmony || "",
+             gekozenRichting: c.gekozenRichting === 'precisie' ? 'A' : (c.gekozenRichting === 'harmony' ? 'B' : c.gekozenRichting)
+          }));
+          setCards(migratedCards);
+          setActiveCardId(migratedCards[0].id);
         }
       } catch (error) {
         console.error("Import error");
@@ -233,6 +269,13 @@ export default function App() {
       <style dangerouslySetInnerHTML={{__html: `
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .minimal-input {
+            width: 100%; background: transparent; border: none;
+            border-bottom: 2px dotted #cbd5e1; padding: 4px 0;
+            font-size: inherit; font-weight: 800; color: #0f172a;
+            outline: none; transition: border-color 0.2s;
+        }
+        .minimal-input:focus { border-bottom-style: solid; border-bottom-color: #0ea5e9; }
         
         /* Dynamische Lettergrootte overrides */
         .print-area .text-sm { font-size: calc(0.875rem * var(--font-scale)) !important; line-height: calc(1.25rem * var(--font-scale)) !important; }
@@ -263,6 +306,11 @@ export default function App() {
             @page { size: landscape; margin: 10mm; }
             .no-print { display: none !important; }
         }
+
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
       `}} />
 
       {!isSidebarOpen && (
@@ -322,7 +370,7 @@ export default function App() {
               </div>
           </div>
 
-          {/* NIEUWE PDF KNOPPEN */}
+          {/* PDF KNOPPEN */}
           <div className="px-4 py-3 border-b border-slate-100 bg-slate-800 flex gap-2 justify-between">
              <button onClick={() => generateSmartPDF('single')} className="flex-1 flex items-center justify-center gap-2 px-3 py-2 bg-sky-600 hover:bg-sky-500 rounded-lg transition-colors text-white text-[11px] font-extrabold uppercase tracking-widest" title="Exporteer actieve kaart">
                   <FileText className="w-4 h-4" />
@@ -334,6 +382,7 @@ export default function App() {
               </button>
           </div>
 
+          {/* KAART SELECTIE */}
           <div className="p-4 border-b border-slate-100 bg-slate-50 flex items-center gap-2">
               <select className="flex-1 bg-white border border-slate-200 rounded-md px-3 py-2 text-sm font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900" value={activeCardId} onChange={(e) => setActiveCardId(e.target.value)}>
                   {cards.map(c => <option key={c.id} value={c.id}>{c.id} - {c.procesblok || "Naamloos"}</option>)}
@@ -342,7 +391,7 @@ export default function App() {
               <button onClick={() => handleDeleteCard(activeCardId)} className="p-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-md transition-colors" title="Verwijderen"><Trash2 className="w-4 h-4" /></button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50/50">
+          <div className="flex-1 overflow-y-auto p-6 space-y-8 bg-slate-50/50 custom-scrollbar pb-10">
               <div className="space-y-4">
                   <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">Header</h3>
                   <div className="grid grid-cols-1 gap-4">
@@ -396,37 +445,58 @@ export default function App() {
               <div className="space-y-4">
                   <h3 className="font-extrabold text-indigo-400 uppercase tracking-widest text-[10px] mb-4">4. Opties & Richtingen</h3>
                   <div>
-                      <label className="block text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1">ARISE Precisie</label>
-                      <textarea rows="3" value={activeCard?.arisePrecisie || ""} onChange={(e) => handleChange(activeCardId, 'arisePrecisie', e.target.value)} className="w-full border border-emerald-200 bg-emerald-50/30 rounded-md p-2 text-sm resize-none"></textarea>
+                      <label className="block text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1">Ontwerp A</label>
+                      <textarea rows="3" value={activeCard?.ontwerpA || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpA', e.target.value)} className="w-full border border-emerald-200 bg-emerald-50/30 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
                   <div>
-                      <label className="block text-[10px] font-bold text-purple-600 uppercase tracking-wide mb-1">ARISE Harmony</label>
-                      <textarea rows="3" value={activeCard?.ariseHarmony || ""} onChange={(e) => handleChange(activeCardId, 'ariseHarmony', e.target.value)} className="w-full border border-purple-200 bg-purple-50/30 rounded-md p-2 text-sm resize-none"></textarea>
+                      <label className="block text-[10px] font-bold text-purple-600 uppercase tracking-wide mb-1">Ontwerp B</label>
+                      <textarea rows="3" value={activeCard?.ontwerpB || ""} onChange={(e) => handleChange(activeCardId, 'ontwerpB', e.target.value)} className="w-full border border-purple-200 bg-purple-50/30 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
               </div>
 
               <div className="space-y-4">
                   <h3 className="font-extrabold text-slate-400 uppercase tracking-widest text-[10px] mb-4">5. Besluit & Opmerkingen</h3>
-                  <div className="grid grid-cols-1 gap-4 pb-10">
+                  <div className="grid grid-cols-1 gap-4">
                       <div className="flex gap-2">
                           <button 
-                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'precisie')} 
-                              className={`flex-1 py-2 rounded-md border text-xs font-bold transition-colors ${activeCard?.gekozenRichting === 'precisie' ? 'bg-emerald-500 text-white border-emerald-500' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'A')} 
+                              className={`flex-1 py-2.5 rounded-md border text-xs font-bold transition-all ${activeCard?.gekozenRichting === 'A' ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                           >
-                              Precisie
+                              Kies Ontwerp A
                           </button>
                           <button 
-                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'harmony')} 
-                              className={`flex-1 py-2 rounded-md border text-xs font-bold transition-colors ${activeCard?.gekozenRichting === 'harmony' ? 'bg-violet-500 text-white border-violet-500' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
+                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'B')} 
+                              className={`flex-1 py-2.5 rounded-md border text-xs font-bold transition-all ${activeCard?.gekozenRichting === 'B' ? 'bg-violet-500 text-white border-violet-500 shadow-md shadow-violet-500/20' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                           >
-                              Harmony
+                              Kies Ontwerp B
                           </button>
                       </div>
                       <div>
                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Opmerkingen / Toelichting</label>
-                          <textarea rows="3" value={activeCard?.opmerkingen || ""} onChange={(e) => handleChange(activeCardId, 'opmerkingen', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
+                          <textarea rows="4" value={activeCard?.opmerkingen || ""} onChange={(e) => handleChange(activeCardId, 'opmerkingen', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none" placeholder="Optionele toelichting..."></textarea>
                       </div>
                   </div>
+              </div>
+
+              {/* PAGINATIE / NAVIGATIE (VERPLAATST NAAR ONDEREN) */}
+              <div className="pt-6 mt-8 border-t border-slate-200 flex items-center justify-between">
+                  <button 
+                      onClick={handlePrevCard} 
+                      disabled={currentIndex === 0}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${currentIndex === 0 ? 'text-slate-300 bg-slate-50 cursor-not-allowed border border-slate-100' : 'text-slate-600 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:shadow'}`}
+                  >
+                      <ChevronLeft className="w-4 h-4" /> Vorige
+                  </button>
+                  <span className="text-xs font-extrabold text-slate-400 uppercase tracking-widest bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200/60">
+                      {currentIndex + 1} / {cards.length}
+                  </span>
+                  <button 
+                      onClick={handleNextCard} 
+                      disabled={currentIndex === cards.length - 1}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${currentIndex === cards.length - 1 ? 'text-slate-300 bg-slate-50 cursor-not-allowed border border-slate-100' : 'text-slate-600 bg-white border border-slate-200 shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:shadow'}`}
+                  >
+                      Volgende <ChevronRight className="w-4 h-4" />
+                  </button>
               </div>
 
           </div>
@@ -508,11 +578,11 @@ export default function App() {
                             <div className="bg-indigo-50/30 rounded-xl border border-indigo-100 p-5">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-indigo-500 mb-4 ml-1">4. Opties & Richtingen</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
-                                    <Section icon={CheckCircle2} title="ARISE Precisie" accentClass="text-emerald-600" iconBg="border-emerald-300 bg-emerald-50">
-                                        <ul className="space-y-1.5 text-slate-800 font-semibold">{renderList(card.arisePrecisie)}</ul>
+                                    <Section icon={CheckCircle2} title="Ontwerp A" accentClass="text-emerald-600" iconBg="border-emerald-300 bg-emerald-50">
+                                        <ul className="space-y-1.5 text-slate-800 font-semibold">{renderList(card.ontwerpA)}</ul>
                                     </Section>
-                                    <Section icon={RefreshCw} title="ARISE Harmony" accentClass="text-violet-600" iconBg="border-violet-300 bg-violet-50">
-                                        <ul className="space-y-1.5 text-slate-800 font-semibold">{renderList(card.ariseHarmony)}</ul>
+                                    <Section icon={RefreshCw} title="Ontwerp B" accentClass="text-violet-600" iconBg="border-violet-300 bg-violet-50">
+                                        <ul className="space-y-1.5 text-slate-800 font-semibold">{renderList(card.ontwerpB)}</ul>
                                     </Section>
                                 </div>
                             </div>
@@ -522,15 +592,15 @@ export default function App() {
                         <div className="px-6 lg:px-10 py-5 bg-slate-50 border-t border-slate-200 rounded-b-[14px] print:rounded-b-[14px] flex flex-col gap-4 mt-auto">
                             <div className="flex flex-col lg:flex-row gap-6 justify-between items-start w-full">
                                 
-                                {/* Linker deel: Knoppen Precisie/Harmony */}
+                                {/* Linker deel: Knoppen Ontwerp A/B */}
                                 <div className="flex flex-col gap-2 shrink-0">
                                     <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-[0.2em]">Gekozen Ontwerp</span>
                                     <div className="flex gap-2.5">
-                                        <button onClick={() => handleChange(card.id, 'gekozenRichting', 'precisie')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.gekozenRichting === 'precisie' ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'}`}>
-                                            {card.gekozenRichting === 'precisie' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Precisie
+                                        <button onClick={() => handleChange(card.id, 'gekozenRichting', 'A')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.gekozenRichting === 'A' ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200' : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'}`}>
+                                            {card.gekozenRichting === 'A' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Ontwerp A
                                         </button>
-                                        <button onClick={() => handleChange(card.id, 'gekozenRichting', 'harmony')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.gekozenRichting === 'harmony' ? 'bg-violet-500 border-violet-500 text-white shadow-md shadow-violet-200' : 'bg-white border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-600'}`}>
-                                            {card.gekozenRichting === 'harmony' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Harmony
+                                        <button onClick={() => handleChange(card.id, 'gekozenRichting', 'B')} className={`flex items-center gap-2 px-5 py-2.5 rounded-lg border-2 text-[11px] font-black uppercase tracking-widest transition-all ${card.gekozenRichting === 'B' ? 'bg-violet-500 border-violet-500 text-white shadow-md shadow-violet-200' : 'bg-white border-slate-200 text-slate-500 hover:border-violet-300 hover:text-violet-600'}`}>
+                                            {card.gekozenRichting === 'B' && <Check className="w-3.5 h-3.5" strokeWidth={4} />} Ontwerp B
                                         </button>
                                     </div>
                                 </div>
