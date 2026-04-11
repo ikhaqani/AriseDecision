@@ -67,6 +67,8 @@ export default function App() {
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
   const [pdfMode, setPdfMode] = useState(null); // 'single' of 'all'
   
+  const [importMessage, setImportMessage] = useState(""); // Nieuwe state voor meldingen
+  
   const fileInputRef = useRef(null);
 
   useEffect(() => {
@@ -130,10 +132,20 @@ export default function App() {
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
-        const importedCards = JSON.parse(event.target.result);
-        if (Array.isArray(importedCards) && importedCards.length > 0) {
-          // Migreer oude bestanden bij import
-          const migratedCards = importedCards.map(c => ({
+        const importedData = JSON.parse(event.target.result);
+        let cardsToLoad = [];
+        
+        // Controleer op verschillende mogelijke JSON-formaten (Array of gewrapt in een object)
+        if (Array.isArray(importedData)) {
+          cardsToLoad = importedData;
+        } else if (importedData && Array.isArray(importedData.cards)) {
+          cardsToLoad = importedData.cards;
+        }
+
+        if (cardsToLoad.length > 0) {
+          // Migreer oude bestanden en vul altijd de initialCard structuur aan
+          const migratedCards = cardsToLoad.map(c => ({
+             ...initialCard, 
              ...c,
              ontwerpA: c.ontwerpA || c.arisePrecisie || "",
              ontwerpB: c.ontwerpB || c.ariseHarmony || "",
@@ -141,10 +153,17 @@ export default function App() {
           }));
           setCards(migratedCards);
           setActiveCardId(migratedCards[0].id);
+          setImportMessage("✅ Data succesvol geïmporteerd!");
+        } else {
+          setImportMessage("❌ Geen geldige DDC kaarten gevonden in dit bestand.");
         }
       } catch (error) {
-        console.error("Import error");
+        console.error("Import error", error);
+        setImportMessage("❌ Fout bij het lezen. Is het een geldig JSON-bestand?");
       }
+      
+      // Verberg melding na 3 seconden
+      setTimeout(() => setImportMessage(""), 3500);
     };
     reader.readAsText(file);
     e.target.value = null; 
@@ -257,6 +276,13 @@ export default function App() {
   return (
     <div className="flex h-screen bg-[#f1f5f9] font-sans overflow-hidden relative">
       
+      {/* IMPORT MELDING */}
+      {importMessage && (
+        <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[150] bg-slate-900 text-white px-6 py-4 rounded-full shadow-2xl flex items-center gap-3 animate-[bounce_0.5s_ease-out]">
+            <span className="font-bold text-sm tracking-wide">{importMessage}</span>
+        </div>
+      )}
+
       {/* LAAD OVERLAY VOOR PDF EXPORT */}
       {isGeneratingPDF && (
         <div className="fixed inset-0 z-[100] bg-slate-900/90 flex flex-col items-center justify-center text-white backdrop-blur-sm">
