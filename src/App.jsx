@@ -435,7 +435,7 @@ export default function App() {
                       <textarea rows="3" value={activeCard?.knelpunten || ""} onChange={(e) => handleChange(activeCardId, 'knelpunten', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
                   <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Vermoede oorzaak</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Oorzaken</label>
                       <textarea rows="3" value={activeCard?.vermoedeOorzaak || ""} onChange={(e) => handleChange(activeCardId, 'vermoedeOorzaak', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
               </div>
@@ -443,11 +443,11 @@ export default function App() {
               <div className="space-y-4">
                   <h3 className="font-extrabold text-blue-400 uppercase tracking-widest text-[10px] mb-4">2. Huidige Situatie & Data</h3>
                   <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Workarounds (As-Is)</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Workarounds</label>
                       <textarea rows="3" value={activeCard?.workarounds || ""} onChange={(e) => handleChange(activeCardId, 'workarounds', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
                   <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Minimal Viable Dataset</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wide mb-1">Welke data minimaal nodig?</label>
                       <textarea rows="3" value={activeCard?.minimalViableDataset || ""} onChange={(e) => handleChange(activeCardId, 'minimalViableDataset', e.target.value)} className="w-full border border-slate-200 rounded-md p-2 text-sm resize-none"></textarea>
                   </div>
               </div>
@@ -568,7 +568,7 @@ export default function App() {
                                     <Section icon={AlertTriangle} title="Knelpunten" accentClass="text-orange-600" iconBg="border-orange-200">
                                         <ul className="space-y-1.5">{renderList(card.knelpunten)}</ul>
                                     </Section>
-                                    <Section icon={Search} title="Vermoede oorzaak" accentClass="text-amber-600" iconBg="border-amber-200">
+                                    <Section icon={Search} title="Oorzaken" accentClass="text-amber-600" iconBg="border-amber-200">
                                         <ul className="space-y-1.5">{renderList(card.vermoedeOorzaak)}</ul>
                                     </Section>
                                 </div>
@@ -577,10 +577,10 @@ export default function App() {
                             <div className="bg-blue-50/40 rounded-xl border border-blue-100 p-5">
                                 <h3 className="text-[10px] font-black uppercase tracking-[0.25em] text-blue-600 mb-4 ml-1">2. Huidige Situatie & Data</h3>
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 text-left">
-                                    <Section icon={Wrench} title="Workarounds (As-Is)" accentClass="text-sky-600" iconBg="border-sky-200">
+                                    <Section icon={Wrench} title="Workarounds" accentClass="text-sky-600" iconBg="border-sky-200">
                                         <ul className="space-y-1.5">{renderList(card.workarounds)}</ul>
                                     </Section>
-                                    <Section icon={Database} title="Minimal Viable Dataset" accentClass="text-blue-600" iconBg="border-blue-200">
+                                    <Section icon={Database} title="Welke data minimaal nodig?" accentClass="text-blue-600" iconBg="border-blue-200">
                                         <ul className="space-y-1.5">{renderList(card.minimalViableDataset)}</ul>
                                     </Section>
                                 </div>
