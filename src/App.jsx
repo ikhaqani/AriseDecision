@@ -485,13 +485,13 @@ export default function App() {
                   <div className="grid grid-cols-1 gap-4">
                       <div className="flex gap-2">
                           <button 
-                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'A')} 
+                              onClick={() => handleChange(activeCardId, 'gekozenRichting', activeCard?.gekozenRichting === 'A' ? '' : 'A')} 
                               className={`flex-1 py-2.5 rounded-md border text-xs font-bold transition-all ${activeCard?.gekozenRichting === 'A' ? 'bg-emerald-500 text-white border-emerald-500 shadow-md shadow-emerald-500/20' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                           >
                               Kies Ontwerp A
                           </button>
                           <button 
-                              onClick={() => handleChange(activeCardId, 'gekozenRichting', 'B')} 
+                              onClick={() => handleChange(activeCardId, 'gekozenRichting', activeCard?.gekozenRichting === 'B' ? '' : 'B')} 
                               className={`flex-1 py-2.5 rounded-md border text-xs font-bold transition-all ${activeCard?.gekozenRichting === 'B' ? 'bg-violet-500 text-white border-violet-500 shadow-md shadow-violet-500/20' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}`}
                           >
                               Kies Ontwerp B
